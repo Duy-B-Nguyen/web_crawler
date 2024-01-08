@@ -1,5 +1,6 @@
 const url = require('url')
 const { JSDOM } = require('jsdom');
+const { type } = require('os');
 
 const normalizeURL = (urlString) => {
   try {
@@ -37,10 +38,27 @@ const getURLsFromHTML = (htmlString, rootURL) => {
   };
 }
 
+const crawlPage = async (rootURL, currentURL, pages) => {
+  try {
+    const response = await fetch(rootURL)
+    if (response.status >= 400) {
+      throw new Error("HTTP error! Status: ", response.status)
+    }
+    const contentType = response.headers.get("Content-Type");
+    if (!contentType || !contentType.includes("text/html")) {
+      throw new Error(`Unsupported Content-Type: ${contentType}`);
+    }
+    console.log(await response.text())
+  } catch(err) {
+    console.error('Error while crawling page: ', err.message)
+    return
+  }
+}
 
 
 module.exports = {
   normalizeURL,
-  getURLsFromHTML
+  getURLsFromHTML,
+  crawlPage
 }
 
