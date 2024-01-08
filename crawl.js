@@ -39,20 +39,45 @@ const getURLsFromHTML = (htmlString, rootURL) => {
 }
 
 const crawlPage = async (rootURL, currentURL, pages) => {
+  const rootURLObj = new URL(rootURL)
+  const currentURLObj = new URL(currentURL);
+
+  if (rootURLObj.hostname !== currentURLObj.hostname) {
+    return pages
+  }
+
+  const normalizedCurrentURL = normalizeURL(currentURL)
+
+  if (pages[normalizedCurrentURL] > 0) {
+    pages[normalizedCurrentURL]++;
+    return pages
+  }
+  pages[normalizedCurrentURL] = 1
+  console.log("Actively crawling:", currentURL)
   try {
     const response = await fetch(rootURL)
     if (response.status >= 400) {
-      throw new Error("HTTP error! Status: ", response.status)
+      console.log("HTTP error! Status: ", response.status)
+      return pages
     }
     const contentType = response.headers.get("Content-Type");
     if (!contentType || !contentType.includes("text/html")) {
-      throw new Error(`Unsupported Content-Type: ${contentType}`);
+      console.log(`Unsupported Content-Type: ${contentType} on page ${currentURL}`);
+      return pages
     }
-    console.log(await response.text())
+    const htmlBody = await response.text()
+
+    const nextURLs = getURLsFromHTML(htmlBody, rootURL)
+
+    for(const nextURL of nextURLs) {
+      pages = await crawlPage(rootURL, nextURL, pages)
+    }
+
   } catch(err) {
     console.error('Error while crawling page: ', err.message)
     return
   }
+  return pages
 }
 
 
