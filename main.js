@@ -1,4 +1,5 @@
 const { crawlPage } = require('./crawl.js')
+const { report } = require('./report.js')
 
 const main = async () => {
   try {
@@ -8,9 +9,7 @@ const main = async () => {
       const rootURL = process.argv[2] 
       console.log("Starting crawl at:", rootURL)
       const pages = await crawlPage(rootURL, rootURL, {});
-      for (const page of Object.entries(pages)) {
-        console.log(page)
-      }
+      report(pages)
     }
   } catch (error) {
     console.error(error.message);
